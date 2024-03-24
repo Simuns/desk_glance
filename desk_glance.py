@@ -1,13 +1,14 @@
 import json
 import subprocess
-import rumps
 import os
+# 3'rd party libraries
+import rumps # Library for creating menu bar applications on macOS
 
 class Yabai:
     def __init__(self):
         self.yabai_path = self.find_app_in_common_locations("yabai")
         if not self.yabai_path:
-            raise Exception("yabai not found in common locations")
+            raise Exception("yabai not found in common locations you need to install the application.")
     
     def find_app_in_common_locations(self, app_name):
         common_paths = ["/usr/local/bin/", "/usr/bin/", "/bin/", "/opt/local/bin/", "/opt/homebrew/bin"]
@@ -25,7 +26,6 @@ class Yabai:
             print(f"Error querying yabai: {e}")
             return []
 
-import rumps
 
 class SpaceIndicatorApp(rumps.App):
     def __init__(self, yabai_instance):
