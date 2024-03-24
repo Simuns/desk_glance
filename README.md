@@ -1,6 +1,6 @@
 # Desk_Glance
 
-Statusbar that displays all the windows and its occupation status.
+Statusbar for mac (yabai) that displays all the windows and its occupation status.
 
 ![Statusbar](.content/statusbar.png)
 
