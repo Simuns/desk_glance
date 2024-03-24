@@ -1,14 +1,15 @@
-import json
-import subprocess
 import os
-# 3'rd party libraries
-import rumps # Library for creating menu bar applications on macOS
+import subprocess
+import json
+import rumps
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 class Yabai:
     def __init__(self):
         self.yabai_path = self.find_app_in_common_locations("yabai")
         if not self.yabai_path:
-            raise Exception("yabai not found in common locations you need to install the application.")
+            raise Exception("yabai not found in common locations. You need to install the application.")
     
     def find_app_in_common_locations(self, app_name):
         common_paths = ["/usr/local/bin/", "/usr/bin/", "/bin/", "/opt/local/bin/", "/opt/homebrew/bin"]
@@ -26,14 +27,21 @@ class Yabai:
             print(f"Error querying yabai: {e}")
             return []
 
+class UpdateHandler(FileSystemEventHandler):
+    def __init__(self, app_instance):
+        self.app_instance = app_instance
+
+    def on_modified(self, event):
+        if event.src_path == "/tmp/com.simuns.desk_glance.watchdog":  # Ensure this path matches your actual watched file's path
+            print("Watched file has been modified, updating title...")
+            self.app_instance.update_title()
 
 class SpaceIndicatorApp(rumps.App):
     def __init__(self, yabai_instance):
         super(SpaceIndicatorApp, self).__init__("", title="")
-        self.yabai = yabai_instance  # Assuming yabai_instance is an instance of a class that has the query_spaces_or_windows method
+        self.yabai = yabai_instance
         self.update_title()
 
-    @rumps.timer(5)
     def update_title(self, _=None):
         # Query windows and spaces
         windows = self.yabai.query_spaces_or_windows('--windows')
@@ -57,7 +65,17 @@ class SpaceIndicatorApp(rumps.App):
 
 if __name__ == "__main__":
     try:
-        yabai_instance = Yabai()  # Ensure Yabai is correctly referenced (e.g., yabai or Yabai)
-        SpaceIndicatorApp(yabai_instance).run()
+        yabai_instance = Yabai()
+        app_instance = SpaceIndicatorApp(yabai_instance)
+
+        event_handler = UpdateHandler(app_instance)
+        observer = Observer()
+        observer.schedule(event_handler, "/tmp/com.simuns.desk_glance.watchdog", recursive=False)  # The directory where your watched file is located
+        observer.start()
+
+        app_instance.run()
+
+        observer.stop()
+        observer.join()
     except Exception as e:
         print(f"Failed to start SpaceIndicatorApp: {e}")
