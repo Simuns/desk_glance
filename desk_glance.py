@@ -29,10 +29,11 @@ class Yabai:
 
 class UpdateHandler(FileSystemEventHandler):
     def __init__(self, app_instance):
+        print("updating spaces...")
         self.app_instance = app_instance
 
     def on_modified(self, event):
-        print("Watched file has been modified, updating spaces...")
+        print("Updating spaces...")
         self.app_instance.update_title()
 
 class SpaceIndicatorApp(rumps.App):
@@ -40,7 +41,7 @@ class SpaceIndicatorApp(rumps.App):
         super(SpaceIndicatorApp, self).__init__("", title="")
         self.yabai = yabai_instance
         self.update_title()
-
+    @rumps.timer(5)
     def update_title(self, _=None):
         # Query windows and spaces
         windows = self.yabai.query_spaces_or_windows('--windows')
@@ -69,14 +70,10 @@ if __name__ == "__main__":
 
         event_handler = UpdateHandler(app_instance)
         observer = Observer()
-        print("observer loaded")
-        observer.schedule(event_handler,"/tmp/com.simuns.desk_glance.watchdog", recursive=False)  # The directory where your watched file is located
-        print("obeserver scheduled")
+        observer.schedule(event_handler,"/tmp/com.simuns.desk_glance.watchdog", recursive=True)
         observer.start()
-        print("observer started")
         app_instance.run()
         observer.stop()
         observer.join()
-        print("at the end")
     except Exception as e:
         print(f"Failed to start SpaceIndicatorApp: {e}")
